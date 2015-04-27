@@ -32,7 +32,6 @@ apt-get install -qy --force-yes --no-install-recommends xvfb \
 							wget \
 							openbox \
 							unzip \
-							python2.7 \
 							x11vnc 
 # Upgrade x11vnc
 dpkg -i /tmp/x11nvc/*.dpkg
@@ -136,15 +135,6 @@ exec 2>&1
 exec x11vnc -display :1 -xkb -rfbportv6 -1 -noipv6 -no6 -rfbport 5900
 EOT
 
-# noVNC
-mkdir -p /etc/service/noVNC
-cat <<'EOT' > /etc/service/noVNC/run
-#!/bin/bash
-exec 2>&1
-cd /noVNC
-exec python /noVNC/utils/websockify --web /noVNC 6080 localhost:5900 
-EOT
-
 # xrdp
 mkdir -p /etc/service/xrdp
 cat <<'EOT' > /etc/service/xrdp/run
@@ -194,9 +184,3 @@ chmod -R +x /etc/service/ /etc/my_init.d/
 # Install tinyMediaManager
 mv /tmp/tmmConfig /tmmConfig
 mv /tmp/tinyMediaManager /
-
-# Install noVNC
-mv /tmp/noVNC /noVNC
-
-# Make 2.7 python default
-ln -s /usr/bin/python2.7 /usr/bin/python
