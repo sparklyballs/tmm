@@ -21,17 +21,22 @@ rm -rf /etc/service/sshd /etc/my_init.d/00_regen_ssh_host_keys.sh
 #########################################
 
 # Repositories
-echo 'deb mirror://mirrors.ubuntu.com/mirrors.txt trusty main universe restricted' > /etc/apt/sources.list
-echo 'deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-updates main universe restricted' >> /etc/apt/sources.list
+echo 'deb mirror://mirrors.ubuntu.com/mirrors.txt trusty main universe restricted multiverse' > /etc/apt/sources.list
+echo 'deb mirror://mirrors.ubuntu.com/mirrors.txt trusty-updates main universe restricted multiverse' >> /etc/apt/sources.list
+add-apt-repository ppa:no1wantdthisname/openjdk-fontfix
 
 
 # Install Dependencies
-# x11rdp install
-dpkg -i /tmp/x11rdp/x11rdp_0.9.0+master-1_amd64.deb
-# xrdp needs to be installed seperately
-dpkg -i /tmp/x11rdp/xrdp_0.9.0+master-1_amd64.deb
 apt-get update -qq
 apt-get install -qy --force-yes --no-install-recommends openjdk-7-jre \
+							libfuse2 \
+							libxfixes3 \
+							libx11-dev \
+							xfonts-base \
+							libxml2 \
+							xutils \
+							libfuse2 \
+							zlib1g \
                                                         wget \
                                                         openbox \
                                                         unzip \
@@ -43,6 +48,10 @@ apt-get install -qy --force-yes --no-install-recommends openjdk-7-jre \
 							libcairo2-dev \
 							tomcat7
 
+# x11rdp install
+dpkg -i /tmp/x11rdp/x11rdp_0.9.0+master-1_amd64.deb
+# xrdp needs to be installed seperately
+dpkg -i /tmp/x11rdp/xrdp_0.9.0+master-1_amd64.deb
 
 #########################################
 ##  FILES, SERVICES AND CONFIGURATION  ##
@@ -68,7 +77,7 @@ cat <<'EOT' > /etc/service/X11rdp/run
 #!/bin/bash
 exec 2>&1
 
-exec /sbin/setuser nobody X11rdp :10 -bs -ac -nolisten tcp -geometry 1280x960 -depth 16 -uds
+exec /sbin/setuser nobody X11rdp :10 -bs -ac -nolisten tcp -geometry 1280x720 -depth 16 -uds
 EOT
 
 # xrdp
@@ -238,6 +247,11 @@ cat <<'EOT' > /etc/guacamole/noauth-config.xml
     <config name="tinyMediaManager" protocol="rdp">
         <param name="hostname" value="127.0.0.1" />
         <param name="port" value="3389" />
+	<param name="color-depth" value="16" />
+	<param name="width" value="720" />
+	<param name="height" value="1280" />
+	<param name="disable-audio" value="true" />
+	<param name="security" value="rdp" />
     </config>
 </configs>
 EOT
@@ -274,6 +288,14 @@ ln -s /var/lib/tomcat7/webapps/guacamole.war /var/lib/tomcat7/webapps/ROOT.war
 ln -s /usr/local/lib/freerdp/guacsnd.so /usr/lib/x86_64-linux-gnu/freerdp/ 
 ln -s /usr/local/lib/freerdp/guacdr.so /usr/lib/x86_64-linux-gnu/freerdp/
 
+# x11rdp links
+ln -s /opt/X11rdp/share/fonts/X11/TTF /usr/share/fonts/X11/TTF
+ln -s /opt/X11rdp/share/fonts/X11/OTF /usr/share/fonts/X11/OTF
+ln -s /opt/X11rdp/share/fonts/X11/75dpi /usr/share/fonts/X11/75dpi
+ln -s /opt/X11rdp/share/fonts/X11/100dpi /usr/share/fonts/X11/100dpi
+ln -s /opt/X11rdp/share/fonts/X11/Type1 /usr/share/fonts/X11/Type1
+
+
 # openbox confg
 cp /tmp/openbox/rc.xml /nobody/.config/openbox/rc.xml
 chown nobody:users /nobody/.config/openbox/rc.xml
@@ -285,4 +307,4 @@ chown nobody:users /nobody/.config/openbox/rc.xml
 # Clean APT install files
 apt-get autoremove -y 
 apt-get clean -y
-rm -rf /var/lib/apt/lists/* /var/cache/* /var/tmp/*
+rm -rf /var/lib/apt/lists/* /var/cache/* /var/tmp/* /tmp/x11rdp /tmp/guacamole /tmp/openbox
